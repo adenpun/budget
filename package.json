@@ -3,8 +3,6 @@
     "type": "module",
     "version": "0.1.0",
     "repository": "adenpun/budget",
-    "main": "dist/index.mjs",
-    "module": "dist/index.mjs",
     "exports": {
         ".": {
             "import": "./dist/index.mjs",
