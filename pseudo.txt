@@ -1,0 +1,38 @@
+This is a pseudo code written by ChatGPT
+
+Initialize program:
+  - Set starting balance to zero
+  - Create empty category list
+
+Add income:
+  - Prompt user for income amount
+  - Add income amount to starting balance
+  - Display updated balance
+
+Add category:
+  - Prompt user for category name
+  - Add category name to category list
+
+Assign money to category:
+  - Prompt user for amount to assign
+  - Subtract assigned amount from starting balance
+  - Add assigned amount to selected category
+  - Display updated balance and category balance
+
+Track expenses:
+  - Prompt user for expense category
+  - Prompt user for expense amount
+  - Subtract expense amount from selected category
+  - Display updated category balance
+
+Adjust budget:
+  - Prompt user for category to adjust
+  - Prompt user for new budget amount
+  - Adjust category balance accordingly
+  - Display updated category balance
+
+Display budget:
+  - Display list of categories and their balances
+  - Display total available balance
+
+Loop program until user exits
