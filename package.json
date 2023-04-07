@@ -1,12 +1,16 @@
 {
     "name": "@adenpun2000/budget",
+    "type": "module",
     "version": "0.1.0",
     "repository": "adenpun/budget",
     "main": "dist/index.mjs",
     "module": "dist/index.mjs",
     "exports": {
-        "import": "./dist/index.mjs",
-        "types": "./dist/index.d.ts"
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": null,
+            "types": "./dist/index.d.ts"
+        }
     },
     "files": [
         "dist"
