@@ -1,6 +1,6 @@
-# Budget
+# @adenpun2000/budget
 
-a personal finances thing
+a useless personal finances library thing
 
 # Why
 
