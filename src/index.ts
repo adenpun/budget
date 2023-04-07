@@ -9,14 +9,17 @@ export class Budget extends Object {
     };
 
     public addCategory(categoryGroup: string, config: Category) {
-        this.m_budget.categories.find((v) => v.name === categoryGroup)?.categories.push(config);
+        let group = this.m_budget.categories.find((v) => v.name === categoryGroup);
+        if (typeof group?.categories.find((v) => v.name === config.name) === "undefined")
+            group?.categories.push(config);
     }
 
     public addCategoryGroup(name: string) {
-        this.m_budget.categories.push({
-            categories: [],
-            name,
-        });
+        if (typeof this.m_budget.categories.find((v) => v.name === name) === "undefined")
+            this.m_budget.categories.push({
+                categories: [],
+                name,
+            });
     }
 
     public assign(categoryGroup: string, category: string, amount: number) {
@@ -26,12 +29,12 @@ export class Budget extends Object {
         }
     }
 
-    public getAssigned(categoryGroup: string, category: string) {
-        return this.getCategory(categoryGroup, category)?.target.assigned;
+    public deleteTransaction(id: string) {
+        this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public removeTransaction(id: string) {
-        this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
+    public getAssigned(categoryGroup: string, category: string) {
+        return this.getCategory(categoryGroup, category)?.target.assigned;
     }
 
     public toJSON() {

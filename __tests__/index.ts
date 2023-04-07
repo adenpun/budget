@@ -57,6 +57,6 @@ test("Transaction", () => {
     });
 
     expect(budget.balance).toBe(-99800);
-    budget.removeTransaction("3rd-random-id");
+    budget.deleteTransaction("3rd-random-id");
     expect(budget.balance).toBe(200);
 });
