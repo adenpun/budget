@@ -13,10 +13,25 @@ test("Default budget", () => {
 test("Category", () => {
     budget.addCategoryGroup("Subscriptions");
 
+    let a = budget.toJSON();
+
+    budget.addCategoryGroup("Subscriptions");
+
+    expect(budget.toJSON()).toMatchObject(a);
+
     budget.addCategory("Subscriptions", {
         name: "Spotify",
         target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
     });
+
+    let b = budget.toJSON();
+
+    budget.addCategory("Subscriptions", {
+        name: "Spotify",
+        target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
+    });
+
+    expect(budget.toJSON()).toMatchObject(b);
 
     expect(budget.toJSON().categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
