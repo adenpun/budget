@@ -1,5 +1,5 @@
-import { Budget as BudgetType, Category, Transaction } from "./budget-version-0.js";
-import { Unarray } from "./utils.js";
+import type { Budget as BudgetType, Category, Transaction } from "./budget-version-0.d.ts";
+export type { BudgetType, Category, Transaction };
 
 export class Budget extends Object {
     private m_budget: BudgetType = {
