@@ -1,7 +1,7 @@
 import type { Budget as BudgetType, Category, Transaction } from "./budget-version-0.d.ts";
 export type { BudgetType, Category, Transaction };
 
-export class Budget extends Object {
+export class Budget {
     private m_budget: BudgetType = {
         categories: [],
         transactions: [],
@@ -52,11 +52,7 @@ export class Budget extends Object {
         return a.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
     }
 
-    public override toLocaleString(): string {
-        return JSON.stringify(this.toJSON());
-    }
-
-    public override toString(): string {
+    public toString(): string {
         return JSON.stringify(this.toJSON());
     }
 
