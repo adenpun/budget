@@ -37,6 +37,15 @@ test("Category", () => {
     expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
     expect(budget.toJSON().categories[0].categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].categories[0].name).toBe("Spotify");
+
+    budget.deleteCategory("Subscriptions", "Spotify");
+
+    expect(budget.toJSON().categories[0].categories).toHaveLength(0);
+
+    budget.deleteCategoryGroup("Subscriptions");
+
+    expect(budget.toJSON().categories).toMatchObject([]);
+    expect(budget.toJSON().categories).toHaveLength(0);
 });
 
 test("Transaction", () => {

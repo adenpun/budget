@@ -29,6 +29,16 @@ export class Budget {
         }
     }
 
+    public deleteCategory(categoryGroup: string, name: string) {
+        let group = this.m_budget.categories.find((v) => v.name === categoryGroup);
+        if (typeof group !== "undefined")
+            group.categories = group.categories.filter((v) => v.name !== name);
+    }
+
+    public deleteCategoryGroup(name: string) {
+        this.m_budget.categories = this.m_budget.categories.filter((v) => v.name !== name);
+    }
+
     public deleteTransaction(id: string) {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
