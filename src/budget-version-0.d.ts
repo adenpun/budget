@@ -1,6 +1,6 @@
 import type { IntRange } from "./utils.d.ts";
 
-export interface Budget {
+export interface BudgetType {
     categories: CategoryGroup[];
     transactions: Transaction[];
     version: 0;

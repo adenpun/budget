@@ -1,3 +1,1 @@
-import type { Budget as Budget0 } from "./budget-version-0";
-
-type Budget = Budget0;
+export type * from "./budget-version-0.d.ts";

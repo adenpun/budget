@@ -1,5 +1,5 @@
-import type { Budget as BudgetType, Category, Transaction } from "./budget-version-0.d.ts";
-export type { BudgetType, Category, Transaction };
+import type { BudgetType, Category, Transaction } from "./budget.d.ts";
+export type * from "./budget.d.ts";
 
 export class Budget {
     private m_budget: BudgetType = {
