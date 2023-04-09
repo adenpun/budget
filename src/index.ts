@@ -2,10 +2,12 @@ import type {
     BudgetType as BudgetType1,
     Category as Category1,
     CategoryGroup as CategoryGroup1,
+    Month,
     Transaction as Transaction1,
+    TransactionType as TransactionType1,
 } from "./budget-version-1.d.ts";
-import type { BudgetType, BudgetType0 } from "./budget.d.ts";
-import { Unarray } from "./utils.js";
+import { randomUUID } from "node:crypto";
+import { TransactOptions } from "./types.js";
 export type * from "./budget-version-1.d.ts";
 
 export class Budget {
@@ -15,51 +17,107 @@ export class Budget {
         version: 1,
     };
 
-    public addCategory(categoryGroup: string, config: Category1) {
-        let group = this.m_budget.categories.find((v) => v.name === categoryGroup);
-        if (typeof group?.categories.find((v) => v.name === config.name) === "undefined")
-            group?.categories.push(config);
+    public addCategory(categoryGroupId: string, name: string, id?: string): string | null {
+        let group = this.m_budget.categories.find((v) => v.id === categoryGroupId);
+        id ??= randomUUID();
+        if (this.getCategory(id) === null) {
+            group?.categories.push({
+                assigned: {
+                    "20-2": 0,
+                },
+                id,
+                name,
+                target: {},
+            });
+            return id;
+        }
+        return null;
     }
 
-    public addCategoryGroup(name: string) {
-        if (typeof this.m_budget.categories.find((v) => v.name === name) === "undefined")
+    public addCategoryGroup(name: string, id?: string): string | null {
+        id ??= randomUUID();
+        if (this.getCategoryGroup(id) === null) {
             this.m_budget.categories.push({
                 categories: [],
+                id,
                 name,
             });
-    }
-
-    public assign(categoryGroup: string, category: string, month: string, amount: number) {
-        let cat = this.getCategory(categoryGroup, category);
-        if (typeof cat !== "undefined") {
-            cat.assigned[month] = amount;
+            return id;
         }
+        return null;
     }
 
-    public deleteCategory(categoryGroup: string, name: string) {
-        let group = this.m_budget.categories.find((v) => v.name === categoryGroup);
+    public assign(id: string, month: Month, amount: number): void {
+        let cat = this.getCategory(id);
+        if (cat !== null) cat.assigned[month] = amount;
+    }
+
+    public deleteCategory(id: string): void {
+        let group = this.m_budget.categories.find((v) => v.categories.find((v) => v.id === id));
         if (typeof group !== "undefined")
-            group.categories = group.categories.filter((v) => v.name !== name);
+            group.categories = group.categories.filter((v) => v.id !== id);
     }
 
-    public deleteCategoryGroup(name: string) {
-        this.m_budget.categories = this.m_budget.categories.filter((v) => v.name !== name);
+    public deleteCategoryGroup(id: string): void {
+        this.m_budget.categories = this.m_budget.categories.filter((v) => v.id !== id);
     }
 
-    public deleteTransaction(id: string) {
+    public deleteTransaction(id: string): void {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssigned(categoryGroup: string, category: string, month: string) {
-        return this.getCategory(categoryGroup, category)?.assigned[month];
+    public getAssigned(id: string, month: Month): number | null {
+        return this.getCategory(id)?.assigned[month] ?? null;
     }
+
+    public getCategory(id: string): Category1 | null {
+        return (
+            this.m_budget.categories
+                .find((v) => v.categories.find((v) => v.id === id))
+                ?.categories.find((v) => v.id === id) ?? null
+        );
+    }
+
+    public getCategoryGroup(id: string): CategoryGroup1 | null {
+        return this.m_budget.categories.find((v) => v.id === id) ?? null;
+    }
+
+    public getTransaction(id: string): Transaction1 | null {
+        return this.m_budget.transactions.find((v) => v.id === id) ?? null;
+    }
+
+    public setTarget(id: string, options: any): void {}
 
     public toJSON() {
-        return this.m_budget;
+        return structuredClone(this.m_budget);
     }
 
-    public transact(transaction: Transaction1) {
-        this.m_budget.transactions.push({ ...transaction });
+    public transact(options: TransactOptions): string | null {
+        options.date ??= Date.now();
+        options.id ??= randomUUID();
+
+        if (this.getTransaction(options.id) !== null) return null;
+
+        if (options.type === "inflow") {
+            this.m_budget.transactions.push({
+                amount: options.amount,
+                date: options.date,
+                description: options.description,
+                id: options.id,
+                type: options.type,
+            });
+            return options.id;
+        } else {
+            this.m_budget.transactions.push({
+                amount: options.amount,
+                categoryId: options.categoryId,
+                date: options.date,
+                description: options.description,
+                id: options.id,
+                type: options.type,
+            });
+            return options.id;
+        }
     }
 
     public get balance() {
@@ -71,12 +129,6 @@ export class Budget {
 
     public toString(): string {
         return JSON.stringify(this.toJSON());
-    }
-
-    private getCategory(categoryGroup: string, category: string) {
-        return this.m_budget.categories
-            .find((v) => v.name === categoryGroup)
-            ?.categories.find((v) => v.name === category);
     }
 
     public static fromJSON(json: BudgetType1) {

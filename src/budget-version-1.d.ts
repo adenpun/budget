@@ -1,5 +1,8 @@
 import type { IntRange } from "./utils.d.ts";
 
+/** `${year}-${month}` */
+export type Month = `${number}-${number}`;
+
 export interface BudgetType {
     categories: CategoryGroup[];
     transactions: Transaction[];
@@ -8,23 +11,27 @@ export interface BudgetType {
 
 export interface CategoryGroup {
     categories: Category[];
+    id: string;
     name: string;
 }
 
 export interface Category {
-    assigned: Record<string, number>;
+    assigned: Record<Month, number>;
+    id: string;
     name: string;
-    target: Target;
+    target: Record<Month, Target>;
 }
 
 export type Transaction = InflowTransaction | OutflowTransaction;
+
+export type TransactionType = "inflow" | "outflow";
 
 export interface TransactionBase {
     amount: number;
     date: number;
     description: string;
     id: string;
-    type: string;
+    type: TransactionType;
 }
 
 export interface InflowTransaction extends TransactionBase {
@@ -32,8 +39,7 @@ export interface InflowTransaction extends TransactionBase {
 }
 
 export interface OutflowTransaction extends TransactionBase {
-    category: string;
-    categoryGroup: string;
+    categoryId: string;
     type: "outflow";
 }
 
