@@ -1,7 +1,8 @@
-import type { IntRange } from "./utils.d.ts";
-
 /** `${year}-${month}` */
 export type Month = `${number}-${number}`;
+
+/** `${month}-${day}` */
+export type DayOfYear = `${number}-${number}`;
 
 export interface BudgetType {
     categories: CategoryGroup[];
@@ -61,15 +62,15 @@ export interface DailyTarget extends PeriodicTargetBase {
 
 export interface WeeklyTarget extends PeriodicTargetBase {
     type: "weekly";
-    day: IntRange<1, 8>;
+    day: number;
 }
 
 export interface MonthlyTarget extends PeriodicTargetBase {
     type: "monthly";
-    day: IntRange<1, 32>;
+    day: number;
 }
 
 export interface YearlyTarget extends PeriodicTargetBase {
     type: "yearly";
-    date: number;
+    date: DayOfYear;
 }

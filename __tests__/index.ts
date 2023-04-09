@@ -51,6 +51,43 @@ test("Assigning", () => {
     budget.assign(catId, "2023-3", 100);
     expect(budget.getAssigned(catId, "2023-3")).toBe(100);
     expect(budget.getAssigned(catId, "2023-4")).toBe(null);
+
+    budget.deleteCategoryGroup(groupId);
+});
+
+test("Targets", () => {
+    let groupId = budget.addCategoryGroup("Subscriptions")!;
+
+    let catId = budget.addCategory(groupId, "Spotify")!;
+
+    const target = {
+        amount: 100,
+        day: 23,
+        type: "monthly",
+    } as const;
+
+    const target2 = {
+        amount: 1000,
+        day: 14,
+        type: "monthly",
+    } as const;
+
+    budget.setTarget(catId, "2023-3", target);
+
+    expect(budget.getTarget(catId, "2023-3")).toMatchObject(target);
+
+    expect(budget.getTarget(catId)).toMatchObject(target);
+
+    budget.setTarget(catId, "2023-10", target2);
+
+    expect(budget.getTarget(catId)).not.toMatchObject(target);
+    expect(budget.getTarget(catId)).toMatchObject(target2);
+
+    budget.setTarget(catId, "2024-10", target);
+    expect(budget.getTarget(catId)).toMatchObject(target);
+
+    budget.deleteTarget(catId, "2024-10");
+    expect(budget.getTarget(catId)).toMatchObject(target2);
 });
 
 test("Transaction", () => {

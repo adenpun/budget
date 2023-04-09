@@ -1,13 +1,17 @@
+import { randomUUID } from "node:crypto";
 import type {
     BudgetType as BudgetType1,
     Category as Category1,
     CategoryGroup as CategoryGroup1,
     Month,
+    Target as Target1,
     Transaction as Transaction1,
-    TransactionType as TransactionType1,
 } from "./budget-version-1.d.ts";
-import { randomUUID } from "node:crypto";
-import { TransactOptions } from "./types.js";
+import type {
+    SetTargetOptions as SetTargetOptions1,
+    TransactOptions as TransactOptions1,
+} from "./options-version-1.d.ts";
+import { FilterKeys } from "./utils";
 export type * from "./budget-version-1.d.ts";
 
 export class Budget {
@@ -62,6 +66,12 @@ export class Budget {
         this.m_budget.categories = this.m_budget.categories.filter((v) => v.id !== id);
     }
 
+    public deleteTarget(id: string, month: Month): void {
+        let cat = this.getCategory(id);
+        if (cat === null) return;
+        cat.target = FilterKeys(this.getCategory(id)?.target!, (v) => v !== month) as any;
+    }
+
     public deleteTransaction(id: string): void {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
@@ -82,17 +92,35 @@ export class Budget {
         return this.m_budget.categories.find((v) => v.id === id) ?? null;
     }
 
+    public getTarget(id: string, month?: Month): Target1 | null {
+        const target = this.getCategory(id)?.target;
+        if (typeof month === "undefined") {
+            if (typeof target === "undefined") return null;
+            const sorted = Object.keys(target).sort((a, b) => {
+                let a1 = a.split("-");
+                let b1 = b.split("-");
+                return parseInt(a1[0]) - parseInt(b1[0]) + (parseInt(a1[1]) - parseInt(b1[1]));
+            });
+            return target[sorted[sorted.length - 1] as any];
+        } else return target?.[month] ?? null;
+    }
+
     public getTransaction(id: string): Transaction1 | null {
         return this.m_budget.transactions.find((v) => v.id === id) ?? null;
     }
 
-    public setTarget(id: string, options: any): void {}
+    public setTarget(id: string, month: Month, options: SetTargetOptions1): void {
+        const cat = this.getCategory(id);
+        if (cat === null) return;
+        // @ts-ignore
+        cat.target[month] = options;
+    }
 
     public toJSON() {
         return structuredClone(this.m_budget);
     }
 
-    public transact(options: TransactOptions): string | null {
+    public transact(options: TransactOptions1): string | null {
         options.date ??= Date.now();
         options.id ??= randomUUID();
 
