@@ -1,14 +1,21 @@
-import type { BudgetType, Category, Transaction } from "./budget.d.ts";
-export type * from "./budget.d.ts";
+import type {
+    BudgetType as BudgetType1,
+    Category as Category1,
+    CategoryGroup as CategoryGroup1,
+    Transaction as Transaction1,
+} from "./budget-version-1.d.ts";
+import type { BudgetType, BudgetType0 } from "./budget.d.ts";
+import { Unarray } from "./utils.js";
+export type * from "./budget-version-1.d.ts";
 
 export class Budget {
-    private m_budget: BudgetType = {
+    private m_budget: BudgetType1 = {
         categories: [],
         transactions: [],
-        version: 0,
+        version: 1,
     };
 
-    public addCategory(categoryGroup: string, config: Category) {
+    public addCategory(categoryGroup: string, config: Category1) {
         let group = this.m_budget.categories.find((v) => v.name === categoryGroup);
         if (typeof group?.categories.find((v) => v.name === config.name) === "undefined")
             group?.categories.push(config);
@@ -22,10 +29,10 @@ export class Budget {
             });
     }
 
-    public assign(categoryGroup: string, category: string, amount: number) {
+    public assign(categoryGroup: string, category: string, month: string, amount: number) {
         let cat = this.getCategory(categoryGroup, category);
         if (typeof cat !== "undefined") {
-            cat.target.assigned = amount;
+            cat.assigned[month] = amount;
         }
     }
 
@@ -43,15 +50,15 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssigned(categoryGroup: string, category: string) {
-        return this.getCategory(categoryGroup, category)?.target.assigned;
+    public getAssigned(categoryGroup: string, category: string, month: string) {
+        return this.getCategory(categoryGroup, category)?.assigned[month];
     }
 
     public toJSON() {
         return this.m_budget;
     }
 
-    public transact(transaction: Transaction) {
+    public transact(transaction: Transaction1) {
         this.m_budget.transactions.push({ ...transaction });
     }
 
@@ -72,7 +79,7 @@ export class Budget {
             ?.categories.find((v) => v.name === category);
     }
 
-    public static fromJSON(json: BudgetType) {
+    public static fromJSON(json: BudgetType1) {
         let budget = new Budget();
         budget.m_budget = json;
         return budget;

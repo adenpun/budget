@@ -6,7 +6,7 @@ test("Default budget", () => {
     expect(budget.toJSON()).toMatchObject<BudgetType>({
         categories: [],
         transactions: [],
-        version: 0,
+        version: 1,
     });
 });
 
@@ -20,15 +20,17 @@ test("Category", () => {
     expect(budget.toJSON()).toMatchObject(a);
 
     budget.addCategory("Subscriptions", {
+        assigned: {},
         name: "Spotify",
-        target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
+        target: { amount: 100, day: 14, type: "monthly" },
     });
 
     let b = budget.toJSON();
 
     budget.addCategory("Subscriptions", {
+        assigned: {},
         name: "Spotify",
-        target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
+        target: { amount: 100, day: 14, type: "monthly" },
     });
 
     expect(budget.toJSON()).toMatchObject(b);
@@ -46,6 +48,11 @@ test("Category", () => {
 
     expect(budget.toJSON().categories).toMatchObject([]);
     expect(budget.toJSON().categories).toHaveLength(0);
+});
+
+test("Assigning", () => {
+    budget.assign("Subscriptions", "Spotify", "2023-03", 100);
+    budget.assign("Subscriptions", "Spotify", "2023-03", 100);
 });
 
 test("Transaction", () => {
