@@ -6,54 +6,94 @@ test("Default budget", () => {
     expect(budget.toJSON()).toMatchObject<BudgetType>({
         categories: [],
         transactions: [],
-        version: 0,
+        version: 1,
     });
 });
 
 test("Category", () => {
-    budget.addCategoryGroup("Subscriptions");
+    let groupId = budget.addCategoryGroup("Subscriptions")!;
 
-    let a = budget.toJSON();
+    let json1 = budget.toJSON();
 
-    budget.addCategoryGroup("Subscriptions");
+    budget.addCategoryGroup("Subscriptions", groupId);
 
-    expect(budget.toJSON()).toMatchObject(a);
+    expect(budget.toJSON()).toMatchObject(json1);
 
-    budget.addCategory("Subscriptions", {
-        name: "Spotify",
-        target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
-    });
+    let catId = budget.addCategory(groupId, "Spotify")!;
 
-    let b = budget.toJSON();
+    let json2 = budget.toJSON();
 
-    budget.addCategory("Subscriptions", {
-        name: "Spotify",
-        target: { amount: 100, assigned: 0, day: 14, type: "monthly" },
-    });
+    budget.addCategory(groupId, "Spotify", catId);
 
-    expect(budget.toJSON()).toMatchObject(b);
+    expect(budget.toJSON()).toMatchObject(json2);
 
     expect(budget.toJSON().categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
     expect(budget.toJSON().categories[0].categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].categories[0].name).toBe("Spotify");
 
-    budget.deleteCategory("Subscriptions", "Spotify");
+    budget.deleteCategory(catId);
 
     expect(budget.toJSON().categories[0].categories).toHaveLength(0);
 
-    budget.deleteCategoryGroup("Subscriptions");
+    budget.deleteCategoryGroup(groupId);
 
     expect(budget.toJSON().categories).toMatchObject([]);
     expect(budget.toJSON().categories).toHaveLength(0);
 });
 
+test("Assigning", () => {
+    let groupId = budget.addCategoryGroup("Subscriptions")!;
+
+    let catId = budget.addCategory(groupId, "Spotify")!;
+
+    budget.assign(catId, "2023-3", 100);
+    budget.assign(catId, "2023-3", 100);
+    expect(budget.getAssigned(catId, "2023-3")).toBe(100);
+    expect(budget.getAssigned(catId, "2023-4")).toBe(null);
+
+    budget.deleteCategoryGroup(groupId);
+});
+
+test("Targets", () => {
+    let groupId = budget.addCategoryGroup("Subscriptions")!;
+
+    let catId = budget.addCategory(groupId, "Spotify")!;
+
+    const target = {
+        amount: 100,
+        day: 23,
+        type: "monthly",
+    } as const;
+
+    const target2 = {
+        amount: 1000,
+        day: 14,
+        type: "monthly",
+    } as const;
+
+    budget.setTarget(catId, "2023-3", target);
+
+    expect(budget.getTarget(catId, "2023-3")).toMatchObject(target);
+
+    expect(budget.getTarget(catId)).toMatchObject(target);
+
+    budget.setTarget(catId, "2023-10", target2);
+
+    expect(budget.getTarget(catId)).not.toMatchObject(target);
+    expect(budget.getTarget(catId)).toMatchObject(target2);
+
+    budget.setTarget(catId, "2024-10", target);
+    expect(budget.getTarget(catId)).toMatchObject(target);
+
+    budget.deleteTarget(catId, "2024-10");
+    expect(budget.getTarget(catId)).toMatchObject(target2);
+});
+
 test("Transaction", () => {
     budget.transact({
         amount: 100,
-        date: Date.now(),
         description: "Allowance given by mom",
-        id: "random-id-lol",
         type: "inflow",
     });
 
@@ -62,25 +102,21 @@ test("Transaction", () => {
 
     budget.transact({
         amount: 100,
-        date: Date.now(),
         description: "Allowance given by dad",
-        id: "2nd-random-id",
         type: "inflow",
     });
 
     expect(budget.balance).toBe(200);
 
-    budget.transact({
+    let spotifyId = budget.transact({
         amount: 100000,
-        category: "Spotify",
-        categoryGroup: "Subscriptions",
+        categoryId: "Spotify",
         date: Date.now(),
         description: "Spotify",
-        id: "3rd-random-id",
         type: "outflow",
-    });
+    })!;
 
     expect(budget.balance).toBe(-99800);
-    budget.deleteTransaction("3rd-random-id");
+    budget.deleteTransaction(spotifyId);
     expect(budget.balance).toBe(200);
 });
