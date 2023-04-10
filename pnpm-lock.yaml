@@ -4,9 +4,9 @@ devDependencies:
   '@types/jest':
     specifier: ^29.5.0
     version: 29.5.0
-  '@types/node':
-    specifier: ^18.15.11
-    version: 18.15.11
+  '@types/uuid':
+    specifier: ^9.0.1
+    version: 9.0.1
   jest:
     specifier: ^29.5.0
     version: 29.5.0(@types/node@18.15.11)(ts-node@10.9.1)
@@ -22,6 +22,9 @@ devDependencies:
   unbuild:
     specifier: ^1.2.0
     version: 1.2.0
+  uuid:
+    specifier: ^9.0.0
+    version: 9.0.0
 
 packages:
 
@@ -1070,6 +1073,10 @@ packages:
 
   /@types/stack-utils@2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
+    dev: true
+
+  /@types/uuid@9.0.1:
+    resolution: {integrity: sha512-rFT3ak0/2trgvp4yYZo5iKFEPsET7vKydKF+VRCxlQ9bpheehyAJH89dAkaLEq/j/RZXJIqcgsmPJKUP1Z28HA==}
     dev: true
 
   /@types/yargs-parser@21.0.0:
@@ -2991,6 +2998,11 @@ packages:
       browserslist: 4.21.5
       escalade: 3.1.1
       picocolors: 1.0.0
+    dev: true
+
+  /uuid@9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
     dev: true
 
   /v8-compile-cache-lib@3.0.1:
