@@ -1,4 +1,4 @@
-import { Budget, BudgetType } from "../src/index";
+import { Budget, BudgetType, GetClosestLastMonth, Month } from "../src/index";
 
 let budget = new Budget();
 
@@ -48,9 +48,11 @@ test("Assigning", () => {
     let catId = budget.addCategory(groupId, "Spotify")!;
 
     budget.assign(catId, "2023-3", 100);
-    budget.assign(catId, "2023-3", 100);
+    budget.assign(catId, "2010-2", 10);
     expect(budget.getAssigned(catId, "2023-3")).toBe(100);
-    expect(budget.getAssigned(catId, "2023-4")).toBe(null);
+    expect(budget.getAssigned(catId, "2023-4")).toBe(100);
+    expect(budget.getAssigned(catId, "2035-12")).toBe(100);
+    expect(budget.getAssigned(catId, "2020-1")).toBe(10);
 
     budget.deleteCategoryGroup(groupId);
 });
@@ -86,6 +88,8 @@ test("Targets", () => {
     budget.setTarget(catId, "2024-10", target);
     expect(budget.getTarget(catId)).toMatchObject(target);
 
+    expect(budget.getTarget(catId, "2023-12")).toMatchObject(target2);
+
     budget.deleteTarget(catId, "2024-10");
     expect(budget.getTarget(catId)).toMatchObject(target2);
 });
@@ -119,4 +123,14 @@ test("Transaction", () => {
     expect(budget.balance).toBe(-99800);
     budget.deleteTransaction(spotifyId);
     expect(budget.balance).toBe(200);
+});
+
+test("utils", () => {
+    const months: Month[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
+    expect(GetClosestLastMonth(months, "2022-2")).toBe("2022-2");
+    expect(GetClosestLastMonth(months, "2023-2")).toBe("2022-2");
+    expect(GetClosestLastMonth(months, "2023-5")).toBe("2023-4");
+    expect(GetClosestLastMonth(months, "2025-3")).toBe("2025-3");
+    expect(GetClosestLastMonth(months, "2025-5")).toBe("2025-3");
+    expect(GetClosestLastMonth(months, "2025-9")).toBe("2025-7");
 });

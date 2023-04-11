@@ -1,7 +1,7 @@
 {
     "name": "@adenpun2000/budget",
     "type": "module",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "repository": "adenpun/budget",
     "exports": {
         ".": {
@@ -17,7 +17,7 @@
     "scripts": {
         "build": "unbuild",
         "dev": "unbuild --stub",
-        "prepack": "pnpm run build && pnpm run test",
+        "prepack": "pnpm run test && pnpm run build",
         "test": "jest"
     },
     "license": "MIT",

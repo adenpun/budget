@@ -11,8 +11,9 @@ import type {
     SetTargetOptions as SetTargetOptions1,
     TransactOptions as TransactOptions1,
 } from "./options-version-1.d.ts";
-import { FilterKeys } from "./utils";
+import { FilterKeys, GetClosestLastMonth, GetLatestMonth } from "./utils";
 export type * from "./budget-version-1.d.ts";
+export { GetClosestLastMonth, GetLatestMonth, SortMonth } from "./utils";
 
 export class Budget {
     private m_budget: BudgetType1 = {
@@ -76,8 +77,12 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssigned(id: string, month: Month): number | null {
-        return this.getCategory(id)?.assigned[month] ?? null;
+    public getAssigned(id: string, month?: Month): number | null {
+        let cat = this.getCategory(id);
+        if (typeof cat?.assigned === "undefined") return null;
+        const months = Object.keys(cat.assigned) as Month[];
+        if (typeof month === "undefined") return cat.assigned[GetLatestMonth(months)];
+        else return cat.assigned[GetClosestLastMonth(months, month)];
     }
 
     public getCategory(id: string): Category1 | null {
@@ -94,15 +99,10 @@ export class Budget {
 
     public getTarget(id: string, month?: Month): Target1 | null {
         const target = this.getCategory(id)?.target;
-        if (typeof month === "undefined") {
-            if (typeof target === "undefined") return null;
-            const sorted = Object.keys(target).sort((a, b) => {
-                let a1 = a.split("-");
-                let b1 = b.split("-");
-                return parseInt(a1[0]) - parseInt(b1[0]) + (parseInt(a1[1]) - parseInt(b1[1]));
-            });
-            return target[sorted[sorted.length - 1] as any];
-        } else return target?.[month] ?? null;
+        if (typeof target === "undefined") return null;
+        const months = Object.keys(target) as Month[];
+        if (typeof month === "undefined") return target[GetLatestMonth(months)];
+        else return target[GetClosestLastMonth(months, month)];
     }
 
     public getTransaction(id: string): Transaction1 | null {
