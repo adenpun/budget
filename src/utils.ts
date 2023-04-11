@@ -1,4 +1,4 @@
-import { Month } from "../dist";
+import { Month } from "./index";
 
 export function Omit<T extends object, U extends string>(object: T, property: U): Omit<T, U> {
     const { [property]: omited, ...rest } = object;
