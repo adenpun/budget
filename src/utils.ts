@@ -17,23 +17,9 @@ export function FilterKeys<T extends object>(
 export function SortMonth(list: Month[], oldest?: boolean) {
     let sorted;
     if (oldest) {
-        sorted = list.sort((a, b) => {
-            let a1 = a.split("-").map((v) => parseInt(v));
-            let b1 = b.split("-").map((v) => parseInt(v));
-            if (a1[0] < b1[0]) return -1;
-            if (a1[0] > b1[0]) return 1;
-            if (a1[0] === b1[0]) return a1[1] - b1[1];
-            return 0;
-        });
+        sorted = list.sort(MonthCompare);
     } else {
-        sorted = list.sort((a, b) => {
-            let a1 = a.split("-").map((v) => parseInt(v));
-            let b1 = b.split("-").map((v) => parseInt(v));
-            if (a1[0] < b1[0]) return 1;
-            if (a1[0] > b1[0]) return -1;
-            if (a1[0] === b1[0]) return b1[1] - a1[1];
-            return 0;
-        });
+        sorted = list.sort((a, b) => MonthCompare(b, a));
     }
     return sorted;
 }
@@ -50,4 +36,22 @@ export function GetClosestLastMonth(list: Month[], month: Month): Month {
     newList.push(month);
     const sorted = SortMonth(newList);
     return sorted[sorted.indexOf(month) + 1];
+}
+
+export function MonthCompare(a: Month, b: Month) {
+    let a1 = a.split("-").map((v) => parseInt(v));
+    let b1 = b.split("-").map((v) => parseInt(v));
+    if (a1[0] > b1[0]) return 1;
+    if (a1[0] < b1[0]) return -1;
+    if (a1[0] === b1[0]) {
+        if (a1[1] === b1[1]) return 0;
+        if (a1[1] > b1[1]) return 1;
+        if (a1[1] < b1[1]) return -1;
+    }
+    return 0;
+}
+
+export function DateToMonth(date: Date | number): Month {
+    if (typeof date === "number") date = new Date(date);
+    return `${date.getFullYear()}-${date.getMonth()}`;
 }

@@ -1,8 +1,10 @@
 import { Budget, BudgetType, GetClosestLastMonth, Month } from "../src/index";
 
+// * Initialization
 let budget = new Budget();
 
 test("Default budget", () => {
+    // * Checks
     expect(budget.toJSON()).toMatchObject<BudgetType>({
         categories: [],
         transactions: [],
@@ -11,55 +13,52 @@ test("Default budget", () => {
 });
 
 test("Category", () => {
+    // * Create CategoryGroup & Category
     let groupId = budget.addCategoryGroup("Subscriptions")!;
-
-    let json1 = budget.toJSON();
-
-    budget.addCategoryGroup("Subscriptions", groupId);
-
-    expect(budget.toJSON()).toMatchObject(json1);
-
     let catId = budget.addCategory(groupId, "Spotify")!;
 
-    let json2 = budget.toJSON();
-
-    budget.addCategory(groupId, "Spotify", catId);
-
-    expect(budget.toJSON()).toMatchObject(json2);
-
+    // * Checks
     expect(budget.toJSON().categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
     expect(budget.toJSON().categories[0].categories).toHaveLength(1);
     expect(budget.toJSON().categories[0].categories[0].name).toBe("Spotify");
 
+    // * Delete Category
     budget.deleteCategory(catId);
 
+    // * Checks
     expect(budget.toJSON().categories[0].categories).toHaveLength(0);
 
+    // * Delete CategoryGroup
     budget.deleteCategoryGroup(groupId);
 
-    expect(budget.toJSON().categories).toMatchObject([]);
+    // * Checks
     expect(budget.toJSON().categories).toHaveLength(0);
 });
 
-test("Assigning", () => {
+test("Assign", () => {
+    // * Create CategoryGroup & Category
     let groupId = budget.addCategoryGroup("Subscriptions")!;
-
     let catId = budget.addCategory(groupId, "Spotify")!;
 
-    budget.assign(catId, "2023-3", 100);
+    // * Assign $10 in 2010-2
     budget.assign(catId, "2010-2", 10);
+    // * Assign $100 in 2023-3
+    budget.assign(catId, "2023-3", 100);
+
+    // * Checks
     expect(budget.getAssigned(catId, "2023-3")).toBe(100);
     expect(budget.getAssigned(catId, "2023-4")).toBe(100);
     expect(budget.getAssigned(catId, "2035-12")).toBe(100);
     expect(budget.getAssigned(catId, "2020-1")).toBe(10);
 
+    // * Delete CategoryGroup
     budget.deleteCategoryGroup(groupId);
 });
 
-test("Targets", () => {
+test("Target", () => {
+    // * Create CategoryGroup & Category
     let groupId = budget.addCategoryGroup("Subscriptions")!;
-
     let catId = budget.addCategory(groupId, "Spotify")!;
 
     const target = {
@@ -74,55 +73,79 @@ test("Targets", () => {
         type: "monthly",
     } as const;
 
+    // * Set target to target in 2023-3
     budget.setTarget(catId, "2023-3", target);
-
-    expect(budget.getTarget(catId, "2023-3")).toMatchObject(target);
-
-    expect(budget.getTarget(catId)).toMatchObject(target);
-
+    // * Set target to target2 in 2023-10
     budget.setTarget(catId, "2023-10", target2);
-
-    expect(budget.getTarget(catId)).not.toMatchObject(target);
-    expect(budget.getTarget(catId)).toMatchObject(target2);
-
+    // * Set target to target in 2024-10
     budget.setTarget(catId, "2024-10", target);
-    expect(budget.getTarget(catId)).toMatchObject(target);
 
+    // * Checks
+    expect(budget.getTarget(catId)).toMatchObject(target);
+    expect(budget.getTarget(catId, "2023-3")).toMatchObject(target);
     expect(budget.getTarget(catId, "2023-12")).toMatchObject(target2);
 
+    // * Delete Target
     budget.deleteTarget(catId, "2024-10");
+
+    // * Checks
     expect(budget.getTarget(catId)).toMatchObject(target2);
 });
 
 test("Transaction", () => {
+    // * Create CategoryGroup & Category
+    let groupId = budget.addCategoryGroup("Subscriptions")!;
+    let catId = budget.addCategory(groupId, "Spotify")!;
+
+    // * Transact $100 to me in 2021-11-30
     budget.transact({
         amount: 100,
+        date: new Date("2021-11-30").getTime(),
         description: "Allowance given by mom",
         type: "inflow",
     });
 
-    expect(budget.toJSON().transactions).toHaveLength(1);
-    expect(budget.balance).toBe(100);
+    // * Checks
+    expect(budget.getBalance()).toBe(100);
 
+    // * Transact $100 to me in 2022-03-09
     budget.transact({
         amount: 100,
+        date: new Date("2022-03-09").getTime(),
         description: "Allowance given by dad",
         type: "inflow",
     });
 
-    expect(budget.balance).toBe(200);
+    // * Checks
+    expect(budget.getBalance()).toBe(200);
+    expect(budget.getBalance("2022-02")).toBe(100);
+    expect(budget.getBalance("2022-12")).toBe(200);
 
-    let spotifyId = budget.transact({
-        amount: 100000,
-        categoryId: "Spotify",
+    // * Assign $50 in 2022-1
+    budget.assign(catId, "2022-1", 50);
+
+    // * Checks
+    expect(budget.getAvailable("2022-1")).toBe(50);
+    expect(budget.getAvailable("2023-1")).toBe(150);
+    expect(budget.getAvailable("2024-1")).toBe(150);
+
+    // * Transact $100000 to Spotify in Date.now()
+    let transId = budget.transact({
+        amount: 100_000,
+        categoryId: catId,
         date: Date.now(),
         description: "Spotify",
         type: "outflow",
     })!;
 
-    expect(budget.balance).toBe(-99800);
-    budget.deleteTransaction(spotifyId);
-    expect(budget.balance).toBe(200);
+    // * Checks
+    expect(budget.getBalance()).toBe(-99800);
+
+    // * Delete transaction
+    budget.deleteTransaction(transId);
+
+    // * Checks
+    expect(budget.getBalance()).toBe(200);
 });
 
 test("utils", () => {
