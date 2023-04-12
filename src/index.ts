@@ -108,10 +108,11 @@ export class Budget {
 
     public getBalance(month?: Month) {
         let transactions: Transaction1[] = this.m_budget.transactions;
-        if (typeof month !== "undefined")
+        if (typeof month !== "undefined") {
             transactions = this.m_budget.transactions.filter((v) => {
-                return MonthCompare(DateToMonth(v.date), month) < 0;
+                return MonthCompare(DateToMonth(v.date), month) <= 0;
             });
+        }
         let transactions2 = transactions.map((v) => {
             return v.type === "inflow" ? v.amount : -v.amount;
         });

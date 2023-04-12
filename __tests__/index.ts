@@ -118,14 +118,14 @@ test("Transaction", () => {
 
     // * Checks
     expect(budget.getBalance()).toBe(200);
-    expect(budget.getBalance("2022-02")).toBe(100);
+    expect(budget.getBalance("2022-2")).toBe(100);
     expect(budget.getBalance("2022-12")).toBe(200);
 
     // * Assign $50 in 2022-1
-    budget.assign(catId, "2022-1", 50);
+    budget.assign(catId, "2021-11", 50);
 
     // * Checks
-    expect(budget.getAvailable("2022-1")).toBe(50);
+    expect(budget.getAvailable("2021-11")).toBe(50);
     expect(budget.getAvailable("2023-1")).toBe(150);
     expect(budget.getAvailable("2024-1")).toBe(150);
 

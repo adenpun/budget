@@ -53,5 +53,5 @@ export function MonthCompare(a: Month, b: Month) {
 
 export function DateToMonth(date: Date | number): Month {
     if (typeof date === "number") date = new Date(date);
-    return `${date.getFullYear()}-${date.getMonth()}`;
+    return `${date.getFullYear()}-${date.getMonth() + 1}`;
 }
