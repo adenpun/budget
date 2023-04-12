@@ -135,8 +135,8 @@ export class Budget {
         const target = this.getCategory(id)?.target;
         if (typeof target === "undefined") return null;
         const months = Object.keys(target) as Month[];
-        if (typeof month === "undefined") return target[GetLatestMonth(months)];
-        else return target[GetClosestLastMonth(months, month)];
+        if (typeof month === "undefined") return target[GetLatestMonth(months)] ?? null;
+        else return target[GetClosestLastMonth(months, month)] ?? null;
     }
 
     public getTransaction(id: string): Transaction1 | null {
