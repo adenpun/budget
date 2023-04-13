@@ -55,3 +55,17 @@ export function DateToMonth(date: Date | number): Month {
     if (typeof date === "number") date = new Date(date);
     return `${date.getFullYear()}-${date.getMonth() + 1}`;
 }
+
+export function PreviousMonth(month: Month): Month {
+    const a = month.split("-").map((v) => parseInt(v));
+    if (a[1] <= 1) (a[0] -= 1), (a[1] = 12);
+    else a[1] -= 1;
+    return a.join("-") as Month;
+}
+
+export function NextMonth(month: Month): Month {
+    const a = month.split("-").map((v) => parseInt(v));
+    if (a[1] >= 12) (a[0] += 1), (a[1] = 1);
+    else a[1] += 1;
+    return a.join("-") as Month;
+}

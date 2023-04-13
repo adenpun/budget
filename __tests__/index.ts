@@ -1,4 +1,11 @@
-import { Budget, BudgetType, GetClosestLastMonth, Month } from "../src/index";
+import {
+    Budget,
+    BudgetType,
+    GetClosestLastMonth,
+    Month,
+    NextMonth,
+    PreviousMonth,
+} from "../src/index";
 
 // * Initialization
 let budget = new Budget();
@@ -148,7 +155,7 @@ test("Transaction", () => {
     expect(budget.getBalance()).toBe(200);
 });
 
-test("utils", () => {
+test("Utils", () => {
     const months: Month[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
     expect(GetClosestLastMonth(months, "2022-2")).toBe("2022-2");
     expect(GetClosestLastMonth(months, "2023-2")).toBe("2022-2");
@@ -156,4 +163,13 @@ test("utils", () => {
     expect(GetClosestLastMonth(months, "2025-3")).toBe("2025-3");
     expect(GetClosestLastMonth(months, "2025-5")).toBe("2025-3");
     expect(GetClosestLastMonth(months, "2025-9")).toBe("2025-7");
+
+    expect(NextMonth("2022-1")).toBe("2022-2");
+    expect(NextMonth("2022-2")).toBe("2022-3");
+    expect(NextMonth("2022-12")).toBe("2023-1");
+    expect(NextMonth("2029-12")).toBe("2030-1");
+    expect(PreviousMonth("2022-12")).toBe("2022-11");
+    expect(PreviousMonth("2022-1")).toBe("2021-12");
+    expect(PreviousMonth("2022-3")).toBe("2022-2");
+    expect(PreviousMonth("1997-7")).toBe("1997-6");
 });

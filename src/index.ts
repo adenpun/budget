@@ -19,7 +19,15 @@ import {
     MonthCompare,
 } from "./utils";
 export type * from "./budget-version-1.d.ts";
-export { DateToMonth, GetClosestLastMonth, GetLatestMonth, MonthCompare, SortMonth } from "./utils";
+export {
+    DateToMonth,
+    GetClosestLastMonth,
+    GetLatestMonth,
+    MonthCompare,
+    NextMonth,
+    PreviousMonth,
+    SortMonth,
+} from "./utils";
 
 export class Budget {
     private m_budget: BudgetType1 = {
