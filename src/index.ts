@@ -92,13 +92,9 @@ export class Budget {
     }
 
     public getAssignedSum(month?: Month): number {
-        const cats = this.m_budget.categories.map((v) => v.categories.map((v) => v.id));
-        let assigneds: number[] = [];
-        cats.forEach((v) => {
-            v.forEach((v) => {
-                assigneds.push(this.getAssigned(v, month) ?? 0);
-            });
-        });
+        const assigneds = this.m_budget.categories.flatMap((v) =>
+            v.categories.map((v) => this.getAssigned(v.id, month) ?? 0)
+        );
         return assigneds.reduce((p, v) => p + v, 0);
     }
 
