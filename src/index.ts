@@ -93,26 +93,31 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssigned(id: string, month: Month): number | null {
+    public getAssigned(id: string, month: Month, includePast?: boolean): number | null {
         let cat = this.getCategory(id);
         if (typeof cat?.assigned === "undefined") return null;
-        return cat.assigned[month] ?? null;
+        if (includePast) {
+            const months = Object.keys(cat.assigned) as Month[];
+            return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
+        } else {
+            return cat.assigned[month] ?? null;
+        }
     }
 
-    public getAssignedSum(month: Month): number {
+    public getAssignedSum(month: Month, includePast?: boolean): number {
         const assigneds = this.m_budget.categories.flatMap((v) =>
-            v.categories.map((v) => this.getAssigned(v.id, month) ?? 0)
+            v.categories.map((v) => this.getAssigned(v.id, month, includePast) ?? 0)
         );
         return assigneds.reduce((p, v) => p + v, 0);
     }
 
     public getAssignLimit(month: Month): number {
-        return this.getBalance(month) - this.getAssignedSum(month);
+        return this.getBalance(month) - this.getAssignedSum(month, true);
     }
 
     public getAvailable(id: string, month: Month): number {
         return (
-            (this.getAssigned(id, month) ?? 0) -
+            (this.getAssigned(id, month, true) ?? 0) -
             this.getTransactionsOfCategory(id, month)
                 .map((v) => v.amount)
                 .reduce((p, c) => p + c, 0)
