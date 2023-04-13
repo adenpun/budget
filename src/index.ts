@@ -96,8 +96,7 @@ export class Budget {
     public getAssigned(id: string, month: Month): number | null {
         let cat = this.getCategory(id);
         if (typeof cat?.assigned === "undefined") return null;
-        const months = Object.keys(cat.assigned) as Month[];
-        return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
+        return cat.assigned[month] ?? null;
     }
 
     public getAssignedSum(month: Month): number {
