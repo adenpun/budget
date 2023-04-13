@@ -17,8 +17,10 @@ import {
     GetClosestLastMonth,
     GetLatestMonth,
     MonthCompare,
+    SortMonth,
 } from "./utils";
 export type * from "./budget-version-1.d.ts";
+export type * from "./options-version-1.d.ts";
 export {
     DateToMonth,
     GetClosestLastMonth,
@@ -91,32 +93,37 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssignedSum(month?: Month): number {
+    public getAssigned(id: string, month: Month): number | null {
+        let cat = this.getCategory(id);
+        if (typeof cat?.assigned === "undefined") return null;
+        const months = Object.keys(cat.assigned) as Month[];
+        return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
+    }
+
+    public getAssignedSum(month: Month): number {
         const assigneds = this.m_budget.categories.flatMap((v) =>
             v.categories.map((v) => this.getAssigned(v.id, month) ?? 0)
         );
         return assigneds.reduce((p, v) => p + v, 0);
     }
 
-    public getAssigned(id: string, month?: Month): number | null {
-        let cat = this.getCategory(id);
-        if (typeof cat?.assigned === "undefined") return null;
-        const months = Object.keys(cat.assigned) as Month[];
-        if (typeof month === "undefined") return cat.assigned[GetLatestMonth(months)];
-        else return cat.assigned[GetClosestLastMonth(months, month)];
-    }
-
-    public getAvailable(month?: Month) {
+    public getAssignLimit(month: Month): number {
         return this.getBalance(month) - this.getAssignedSum(month);
     }
 
-    public getBalance(month?: Month) {
-        let transactions: Transaction1[] = this.m_budget.transactions;
-        if (typeof month !== "undefined") {
-            transactions = this.m_budget.transactions.filter((v) => {
-                return MonthCompare(DateToMonth(v.date), month) <= 0;
-            });
-        }
+    public getAvailable(id: string, month: Month): number {
+        return (
+            (this.getAssigned(id, month) ?? 0) -
+            this.getTransactionsOfCategory(id, month)
+                .map((v) => v.amount)
+                .reduce((p, c) => p + c, 0)
+        );
+    }
+
+    public getBalance(month: Month): number {
+        let transactions: Transaction1[] = this.m_budget.transactions.filter((v) => {
+            return MonthCompare(DateToMonth(v.date), month) <= 0;
+        });
         let transactions2 = transactions.map((v) => {
             return v.type === "inflow" ? v.amount : -v.amount;
         });
@@ -135,16 +142,24 @@ export class Budget {
         return this.m_budget.categories.find((v) => v.id === id) ?? null;
     }
 
-    public getTarget(id: string, month?: Month): Target1 | null {
+    public getTarget(id: string, month: Month): Target1 | null {
         const target = this.getCategory(id)?.target;
         if (typeof target === "undefined") return null;
         const months = Object.keys(target) as Month[];
-        if (typeof month === "undefined") return target[GetLatestMonth(months)] ?? null;
-        else return target[GetClosestLastMonth(months, month)] ?? null;
+        return target[GetClosestLastMonth(months, month)] ?? null;
     }
 
     public getTransaction(id: string): Transaction1 | null {
         return this.m_budget.transactions.find((v) => v.id === id) ?? null;
+    }
+
+    public getTransactionsOfCategory(id: string, month: Month): Transaction1[] {
+        return this.m_budget.transactions.filter(
+            (v) =>
+                v.type === "outflow" &&
+                v.categoryId === id &&
+                MonthCompare(DateToMonth(v.date), month) <= 0
+        );
     }
 
     public setTarget(id: string, month: Month, options: SetTargetOptions1): void {
@@ -154,7 +169,7 @@ export class Budget {
         cat.target[month] = options;
     }
 
-    public toJSON() {
+    public toJSON(): BudgetType1 {
         return structuredClone(this.m_budget);
     }
 
@@ -190,11 +205,7 @@ export class Budget {
         return JSON.stringify(this.toJSON());
     }
 
-    public get balance(): number {
-        return this.getBalance();
-    }
-
-    public static fromJSON(json: BudgetType1) {
+    public static fromJSON(json: BudgetType1): Budget {
         let budget = new Budget();
         budget.m_budget = json;
         return budget;

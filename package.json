@@ -1,7 +1,7 @@
 {
     "name": "@adenpun2000/budget",
     "type": "module",
-    "version": "3.3.2",
+    "version": "4.0.0",
     "repository": "adenpun/budget",
     "exports": {
         ".": {
