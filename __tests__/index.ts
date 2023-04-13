@@ -88,7 +88,6 @@ test("Target", () => {
     budget.setTarget(catId, "2024-10", target);
 
     // * Checks
-    expect(budget.getTarget(catId)).toMatchObject(target);
     expect(budget.getTarget(catId, "2023-3")).toMatchObject(target);
     expect(budget.getTarget(catId, "2023-12")).toMatchObject(target2);
 
@@ -96,7 +95,7 @@ test("Target", () => {
     budget.deleteTarget(catId, "2024-10");
 
     // * Checks
-    expect(budget.getTarget(catId)).toMatchObject(target2);
+    expect(budget.getTarget(catId, "2024-10")).toMatchObject(target2);
 });
 
 test("Transaction", () => {
@@ -113,7 +112,7 @@ test("Transaction", () => {
     });
 
     // * Checks
-    expect(budget.getBalance()).toBe(100);
+    expect(budget.getBalance("2022-1")).toBe(100);
 
     // * Transact $100 to me in 2022-03-09
     budget.transact({
@@ -124,7 +123,6 @@ test("Transaction", () => {
     });
 
     // * Checks
-    expect(budget.getBalance()).toBe(200);
     expect(budget.getBalance("2022-2")).toBe(100);
     expect(budget.getBalance("2022-12")).toBe(200);
 
@@ -132,27 +130,31 @@ test("Transaction", () => {
     budget.assign(catId, "2021-11", 50);
 
     // * Checks
-    expect(budget.getAvailable("2021-11")).toBe(50);
-    expect(budget.getAvailable("2023-1")).toBe(150);
-    expect(budget.getAvailable("2024-1")).toBe(150);
+    expect(budget.getAssignLimit("2021-11")).toBe(50);
+    expect(budget.getAssignLimit("2023-1")).toBe(150);
+    expect(budget.getAssignLimit("2024-1")).toBe(150);
+    expect(budget.getAvailable(catId, "2021-11")).toBe(50);
 
     // * Transact $100000 to Spotify in Date.now()
     let transId = budget.transact({
         amount: 100_000,
         categoryId: catId,
-        date: Date.now(),
-        description: "Spotify",
+        date: new Date("2022-10-09").getTime(),
+        description: "Spotify 1000-year-subscription",
         type: "outflow",
     })!;
 
     // * Checks
-    expect(budget.getBalance()).toBe(-99800);
+    expect(budget.getAvailable(catId, "2022-11")).toBe(-99950);
+    expect(budget.getBalance("2022-10")).toBe(-99800);
+    expect(budget.getTransactionsOfCategory("random-id-lol", "2022-10")).toHaveLength(0);
+    expect(budget.getTransactionsOfCategory(catId, "2022-10")).toHaveLength(1);
 
     // * Delete transaction
     budget.deleteTransaction(transId);
 
     // * Checks
-    expect(budget.getBalance()).toBe(200);
+    expect(budget.getBalance("2022-10")).toBe(200);
 });
 
 test("Utils", () => {
