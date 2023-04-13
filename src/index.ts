@@ -93,12 +93,21 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
-    public getAssigned(id: string, month: Month, includePast?: boolean): number | null {
+    public getAssigned(
+        id: string,
+        month: Month,
+        allowPast?: boolean,
+        includePast?: boolean
+    ): number | null {
         let cat = this.getCategory(id);
         if (typeof cat?.assigned === "undefined") return null;
-        if (includePast) {
+        if (allowPast) {
             const months = Object.keys(cat.assigned) as Month[];
-            return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
+            if (includePast) {
+                return months.map((v) => cat?.assigned[v] ?? 0).reduce((p, c) => p + c, 0);
+            } else {
+                return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
+            }
         } else {
             return cat.assigned[month] ?? null;
         }
