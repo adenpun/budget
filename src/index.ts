@@ -104,7 +104,9 @@ export class Budget {
         if (allowPast) {
             const months = Object.keys(cat.assigned) as Month[];
             if (includePast) {
-                return months.map((v) => cat?.assigned[v] ?? 0).reduce((p, c) => p + c, 0);
+                return months
+                    .filter((v) => MonthCompare(v, month) <= 0)
+                    .reduce((p, c) => p + (cat?.assigned[c as Month] ?? 0), 0);
             } else {
                 return cat.assigned[GetClosestLastMonth(months, month)] ?? null;
             }
@@ -115,7 +117,7 @@ export class Budget {
 
     public getAssignedSum(month: Month, includePast?: boolean): number {
         const assigneds = this.m_budget.categories.flatMap((v) =>
-            v.categories.map((v) => this.getAssigned(v.id, month, includePast) ?? 0)
+            v.categories.map((v) => this.getAssigned(v.id, month, includePast, includePast) ?? 0)
         );
         return assigneds.reduce((p, v) => p + v, 0);
     }
@@ -134,13 +136,14 @@ export class Budget {
     }
 
     public getBalance(month: Month): number {
-        let transactions: Transaction1[] = this.m_budget.transactions.filter((v) => {
-            return MonthCompare(DateToMonth(v.date), month) <= 0;
-        });
-        let transactions2 = transactions.map((v) => {
-            return v.type === "inflow" ? v.amount : -v.amount;
-        });
-        return transactions2.reduce((p, c) => p + c, 0);
+        let transactions = this.m_budget.transactions
+            .filter((v) => {
+                return MonthCompare(DateToMonth(v.date), month) <= 0;
+            })
+            .map((v) => {
+                return v.type === "inflow" ? v.amount : -v.amount;
+            });
+        return transactions.reduce((p, c) => p + c, 0);
     }
 
     public getCategory(id: string): Category1 | null {

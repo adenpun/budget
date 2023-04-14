@@ -59,6 +59,8 @@ test("Assign", () => {
     expect(budget.getAssigned(catId, "2035-12", true)).toBe(100);
     expect(budget.getAssigned(catId, "2035-12", true, true)).toBe(110);
     expect(budget.getAssigned(catId, "2020-1", true)).toBe(10);
+    expect(budget.getAssignLimit("2023-2")).toBe(-10);
+    expect(budget.getAssignLimit("2023-3")).toBe(-110);
 
     // * Delete CategoryGroup
     budget.deleteCategoryGroup(groupId);
