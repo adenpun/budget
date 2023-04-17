@@ -123,7 +123,7 @@ export class Budget {
     }
 
     public getAssignLimit(month: Month): number {
-        return this.getBalance(month) - this.getAssignedSum(month, true);
+        return this.getTransactionInflowSum(month) - this.getAssignedSum(month, true);
     }
 
     public getAvailable(id: string, month: Month): number {
@@ -169,6 +169,15 @@ export class Budget {
         return this.m_budget.transactions.find((v) => v.id === id) ?? null;
     }
 
+    public getTransactionInflowSum(month: Month): number {
+        let transactions = this.m_budget.transactions
+            .filter((v) => {
+                return v.type === "inflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
+            })
+            .map((v) => v.amount);
+        return transactions.reduce((p, c) => p + c, 0);
+    }
+
     public getTransactionsOfCategory(id: string, month: Month): Transaction1[] {
         return this.m_budget.transactions.filter(
             (v) =>
@@ -176,6 +185,15 @@ export class Budget {
                 v.categoryId === id &&
                 MonthCompare(DateToMonth(v.date), month) <= 0
         );
+    }
+
+    public getTransactionOutflowSum(month: Month): number {
+        let transactions = this.m_budget.transactions
+            .filter((v) => {
+                return v.type === "outflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
+            })
+            .map((v) => v.amount);
+        return transactions.reduce((p, c) => p + c, 0);
     }
 
     public setTarget(id: string, month: Month, options: SetTargetOptions1): void {
