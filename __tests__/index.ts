@@ -5,6 +5,8 @@ import {
     Month,
     NextMonth,
     PreviousMonth,
+    Target,
+    z,
 } from "../src/index";
 
 // * Initialization
@@ -12,11 +14,23 @@ let budget = new Budget();
 
 test("Default budget", () => {
     // * Checks
-    expect(budget.toJSON()).toMatchObject<BudgetType>({
-        categories: [],
+    expect(budget.toJSON()).toMatchObject<z.infer<typeof BudgetType>>({
+        categoryGroups: [],
         transactions: [],
-        version: 1,
+        version: 2,
     });
+});
+
+test("FromJSON", () => {
+    // @ts-expect-error
+    expect(() => Budget.fromJSON({})).toThrow();
+    expect(() =>
+        Budget.fromJSON({
+            categoryGroups: [],
+            transactions: [],
+            version: 2,
+        })
+    ).not.toThrow();
 });
 
 test("Category", () => {
@@ -25,22 +39,22 @@ test("Category", () => {
     let catId = budget.addCategory(groupId, "Spotify")!;
 
     // * Checks
-    expect(budget.toJSON().categories).toHaveLength(1);
-    expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
-    expect(budget.toJSON().categories[0].categories).toHaveLength(1);
-    expect(budget.toJSON().categories[0].categories[0].name).toBe("Spotify");
+    expect(budget.toJSON().categoryGroups).toHaveLength(1);
+    expect(budget.toJSON().categoryGroups[0].name).toBe("Subscriptions");
+    expect(budget.toJSON().categoryGroups[0].categories).toHaveLength(1);
+    expect(budget.toJSON().categoryGroups[0].categories[0].name).toBe("Spotify");
 
     // * Delete Category
     budget.deleteCategory(catId);
 
     // * Checks
-    expect(budget.toJSON().categories[0].categories).toHaveLength(0);
+    expect(budget.toJSON().categoryGroups[0].categories).toHaveLength(0);
 
     // * Delete CategoryGroup
     budget.deleteCategoryGroup(groupId);
 
     // * Checks
-    expect(budget.toJSON().categories).toHaveLength(0);
+    expect(budget.toJSON().categoryGroups).toHaveLength(0);
 });
 
 test("Assign", () => {
@@ -73,15 +87,17 @@ test("Target", () => {
 
     const target = {
         amount: 100,
-        day: 23,
-        type: "monthly",
-    } as const;
+        dayOfMonth: 23,
+        every: 1,
+        type: "every_x_month",
+    } as z.infer<typeof Target>;
 
     const target2 = {
         amount: 1000,
-        day: 14,
-        type: "monthly",
-    } as const;
+        dayOfMonth: 23,
+        every: 1,
+        type: "every_x_month",
+    } as z.infer<typeof Target>;
 
     // * Set target to target in 2023-3
     budget.setTarget(catId, "2023-3", target);
@@ -161,7 +177,7 @@ test("Transaction", () => {
 });
 
 test("Utils", () => {
-    const months: Month[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
+    const months: z.infer<typeof Month>[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
     expect(GetClosestLastMonth(months, "2022-2")).toBe("2022-2");
     expect(GetClosestLastMonth(months, "2023-2")).toBe("2022-2");
     expect(GetClosestLastMonth(months, "2023-5")).toBe("2023-4");

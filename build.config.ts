@@ -1,5 +1,4 @@
 import { defineBuildConfig } from "unbuild";
-import { devDependencies } from "./package.json";
 
 export default defineBuildConfig({
     declaration: true,
