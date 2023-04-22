@@ -1,5 +1,5 @@
 import { v4 as randomUUID } from "uuid";
-import type { z } from "zod";
+import { z } from "zod";
 import {
     BudgetType as BudgetType2,
     Category as Category2,
@@ -13,6 +13,7 @@ import type {
     TransactOptions as TransactOptions2,
 } from "./options-version-2";
 import { DateToMonth, FilterKeys, GetClosestLastMonth, MonthCompare } from "./utils";
+import { BudgetType as BudgetType1 } from "./budget-version-1";
 
 export class Budget {
     private m_budget: z.infer<typeof BudgetType2> = {
@@ -227,6 +228,16 @@ export class Budget {
 
     public toString(): string {
         return JSON.stringify(this.toJSON());
+    }
+
+    public update() {
+        let version = this.m_budget.version as number;
+
+        if (version === 1) {
+            let budget = BudgetType1.parse(this.m_budget);
+            this.m_budget.version = 2;
+            // TODO
+        }
     }
 
     public static fromJSON(json: z.infer<typeof BudgetType2>): Budget {
