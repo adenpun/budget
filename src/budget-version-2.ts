@@ -9,6 +9,7 @@ export const Month = z.custom<`${number}-${number}`>((data) => {
     );
 });
 
+//#region Target
 export const TargetTypes = z.union([
     z.literal("every_x_week"),
     z.literal("every_x_month"),
@@ -49,7 +50,9 @@ export const SavingTarget = TargetBase.extend({
 });
 
 export const Target = z.union([EveryXTarget, MonthlyBuilderTarget]);
+//#endregion
 
+//#region Category
 export const Category = z.object({
     assigned: z.record(Month, z.number().gt(0)),
     id: z.string().uuid(),
@@ -62,7 +65,9 @@ export const CategoryGroup = z.object({
     id: z.string().uuid(),
     name: z.string(),
 });
+//#endregion
 
+//#region Transaction
 export const TransactionBase = z.object({
     amount: z.number(),
     date: z.number(),
@@ -81,9 +86,16 @@ export const OutflowTransaction = TransactionBase.extend({
 });
 
 export const Transaction = z.union([InflowTransaction, OutflowTransaction]);
+//#endregion
+
+export const Account = z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    transactions: z.array(Transaction),
+});
 
 export const BudgetType = z.object({
     categoryGroups: z.array(CategoryGroup),
-    transactions: z.array(Transaction),
+    accounts: z.array(Account),
     version: z.literal(2),
 });

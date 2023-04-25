@@ -1,6 +1,7 @@
 import { v4 as randomUUID } from "uuid";
 import { z } from "zod";
 import {
+    Account as Account2,
     BudgetType as BudgetType2,
     Category as Category2,
     CategoryGroup as CategoryGroup2,
@@ -77,6 +78,10 @@ export class Budget {
         this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
     }
 
+    public getAccount(id: string): z.infer<typeof Account2> | null {
+        return this.m_budget.accounts.find((v) => v.id === id) ?? null;
+    }
+
     public getAssigned(
         id: string,
         month: z.infer<typeof Month>,
@@ -119,7 +124,8 @@ export class Budget {
         );
     }
 
-    public getBalance(month: z.infer<typeof Month>): number {
+    public getBalance(month: z.infer<typeof Month>, account?: string): number {
+        let trans = Object.keys(this.m_budget.accounts);
         let transactions = this.m_budget.transactions
             .filter((v) => {
                 return MonthCompare(DateToMonth(v.date), month) <= 0;
@@ -213,8 +219,8 @@ export class Budget {
                 type: options.type,
             });
             return options.id;
-        } else {
-            this.m_budget.transactions.push({
+        } else if (options.type === "outflow") {
+            this.m_budget.accounts.transactions.push({
                 amount: options.amount,
                 categoryId: options.categoryId,
                 date: options.date,
@@ -223,7 +229,9 @@ export class Budget {
                 type: options.type,
             });
             return options.id;
+        } else if (options.type === "transfer") {
         }
+        return null;
     }
 
     public toString(): string {
