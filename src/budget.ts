@@ -18,10 +18,23 @@ import { BudgetType as BudgetType1 } from "./budget-version-1";
 
 export class Budget {
     private m_budget: z.infer<typeof BudgetType2> = {
+        accounts: [],
         categoryGroups: [],
-        transactions: [],
         version: 2,
     };
+
+    public addAccount(name: string, id?: string) {
+        id ??= randomUUID();
+        if (this.getAccount(id) === null) {
+            this.m_budget.accounts.push({
+                id,
+                name,
+                transactions: [],
+            });
+            return id;
+        }
+        return null;
+    }
 
     public addCategory(categoryGroupId: string, name: string, id?: string): string | null {
         let group = this.m_budget.categoryGroups.find((v) => v.id === categoryGroupId);
@@ -75,11 +88,17 @@ export class Budget {
     }
 
     public deleteTransaction(id: string): void {
-        this.m_budget.transactions = this.m_budget.transactions.filter((v) => v.id !== id);
+        let account = this.getAccountByTransaction(id);
+        if (account !== null)
+            account.transactions = account.transactions.filter((v) => v.id !== id);
     }
 
     public getAccount(id: string): z.infer<typeof Account2> | null {
         return this.m_budget.accounts.find((v) => v.id === id) ?? null;
+    }
+
+    public getAccountByTransaction(id: string): z.infer<typeof Account2> | null {
+        return this.m_budget.accounts.find((v) => v.transactions.find((v) => v.id === id)) ?? null;
     }
 
     public getAssigned(
@@ -125,14 +144,14 @@ export class Budget {
     }
 
     public getBalance(month: z.infer<typeof Month>, account?: string): number {
-        let trans = Object.keys(this.m_budget.accounts);
-        let transactions = this.m_budget.transactions
-            .filter((v) => {
-                return MonthCompare(DateToMonth(v.date), month) <= 0;
-            })
-            .map((v) => {
-                return v.type === "inflow" ? v.amount : -v.amount;
-            });
+        let transactions =
+            this.getTransactions(account)
+                .filter((v) => {
+                    return MonthCompare(DateToMonth(v.date), month) <= 0;
+                })
+                .map((v) => {
+                    return v.type === "inflow" ? v.amount : -v.amount;
+                }) ?? [];
         return transactions.reduce((p, c) => p + c, 0);
     }
 
@@ -156,15 +175,24 @@ export class Budget {
     }
 
     public getTransaction(id: string): z.infer<typeof Transaction2> | null {
-        return this.m_budget.transactions.find((v) => v.id === id) ?? null;
+        return (
+            this.m_budget.accounts.flatMap((v) => v.transactions).find((v) => v.id === id) ?? null
+        );
     }
 
-    public getTransactionInflowSum(month: z.infer<typeof Month>): number {
-        let transactions = this.m_budget.transactions
-            .filter((v) => {
-                return v.type === "inflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
-            })
-            .map((v) => v.amount);
+    public getTransactions(account?: string): z.infer<typeof Transaction2>[] {
+        if (typeof account !== "undefined")
+            return this.m_budget.accounts.find((v) => v.id === account)?.transactions ?? [];
+        else return this.m_budget.accounts.flatMap((v) => v.transactions);
+    }
+
+    public getTransactionInflowSum(month: z.infer<typeof Month>, account?: string): number {
+        let transactions =
+            this.getTransactions(account)
+                .filter((v) => {
+                    return v.type === "inflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
+                })
+                .map((v) => v.amount) ?? [];
         return transactions.reduce((p, c) => p + c, 0);
     }
 
@@ -172,7 +200,7 @@ export class Budget {
         id: string,
         month: z.infer<typeof Month>
     ): z.infer<typeof Transaction2>[] {
-        return this.m_budget.transactions.filter(
+        return this.getTransactions().filter(
             (v) =>
                 v.type === "outflow" &&
                 v.categoryId === id &&
@@ -180,12 +208,13 @@ export class Budget {
         );
     }
 
-    public getTransactionOutflowSum(month: z.infer<typeof Month>): number {
-        let transactions = this.m_budget.transactions
-            .filter((v) => {
-                return v.type === "outflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
-            })
-            .map((v) => v.amount);
+    public getTransactionOutflowSum(month: z.infer<typeof Month>, account?: string): number {
+        let transactions =
+            this.getTransactions(account)
+                .filter((v) => {
+                    return v.type === "outflow" && MonthCompare(DateToMonth(v.date), month) <= 0;
+                })
+                .map((v) => v.amount) ?? [];
         return transactions.reduce((p, c) => p + c, 0);
     }
 
@@ -211,7 +240,7 @@ export class Budget {
         if (this.getTransaction(options.id) !== null) return null;
 
         if (options.type === "inflow") {
-            this.m_budget.transactions.push({
+            this.getAccount(options.account)?.transactions.push({
                 amount: options.amount,
                 date: options.date,
                 description: options.description,
@@ -220,7 +249,7 @@ export class Budget {
             });
             return options.id;
         } else if (options.type === "outflow") {
-            this.m_budget.accounts.transactions.push({
+            this.getAccount(options.account)?.transactions.push({
                 amount: options.amount,
                 categoryId: options.categoryId,
                 date: options.date,
@@ -230,6 +259,7 @@ export class Budget {
             });
             return options.id;
         } else if (options.type === "transfer") {
+            // return null;
         }
         return null;
     }

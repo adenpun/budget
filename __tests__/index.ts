@@ -15,19 +15,24 @@ let budget = new Budget();
 test("Default budget", () => {
     // * Checks
     expect(budget.toJSON()).toMatchObject<z.infer<typeof BudgetType>>({
+        accounts: [],
         categoryGroups: [],
-        transactions: [],
         version: 2,
     });
 });
 
 test("FromJSON", () => {
-    // @ts-expect-error
-    expect(() => Budget.fromJSON({})).toThrow();
     expect(() =>
+        // @ts-expect-error
         Budget.fromJSON({
             categoryGroups: [],
-            transactions: [],
+            version: 2,
+        })
+    ).toThrow();
+    expect(() =>
+        Budget.fromJSON({
+            accounts: [],
+            categoryGroups: [],
             version: 2,
         })
     ).not.toThrow();
@@ -122,8 +127,12 @@ test("Transaction", () => {
     let groupId = budget.addCategoryGroup("Subscriptions")!;
     let catId = budget.addCategory(groupId, "Spotify")!;
 
+    let account1 = budget.addAccount("Checking")!;
+    let account2 = budget.addAccount("Savings")!;
+
     // * Transact $100 to me in 2021-11-30
     budget.transact({
+        account: account1,
         amount: 100,
         date: new Date("2021-11-30").getTime(),
         description: "Allowance given by mom",
@@ -135,6 +144,7 @@ test("Transaction", () => {
 
     // * Transact $100 to me in 2022-03-09
     budget.transact({
+        account: account2,
         amount: 100,
         date: new Date("2022-03-09").getTime(),
         description: "Allowance given by dad",
@@ -143,6 +153,8 @@ test("Transaction", () => {
 
     // * Checks
     expect(budget.getBalance("2022-2")).toBe(100);
+    expect(budget.getBalance("2022-2", account1)).toBe(100);
+    expect(budget.getBalance("2022-2", account2)).toBe(0);
     expect(budget.getBalance("2022-12")).toBe(200);
 
     // * Assign $50 in 2022-1
@@ -156,6 +168,7 @@ test("Transaction", () => {
 
     // * Transact $100000 to Spotify in Date.now()
     let transId = budget.transact({
+        account: account1,
         amount: 100_000,
         categoryId: catId,
         date: new Date("2022-10-09").getTime(),
