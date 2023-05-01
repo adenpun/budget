@@ -5,18 +5,130 @@ import {
     Month,
     NextMonth,
     PreviousMonth,
+    Target,
+    Transaction,
+    z,
 } from "../src/index";
+import type { BudgetType as BudgetType1 } from "../src/budget-version-1";
 
 // * Initialization
 let budget = new Budget();
 
 test("Default budget", () => {
     // * Checks
-    expect(budget.toJSON()).toMatchObject<BudgetType>({
-        categories: [],
-        transactions: [],
-        version: 1,
+    expect(budget.toJSON()).toMatchObject<z.infer<typeof BudgetType>>({
+        accounts: [],
+        categoryGroups: [],
+        version: 2,
     });
+});
+
+test("Update", () => {
+    let updated = Budget.Update({
+        categories: [
+            {
+                categories: [
+                    {
+                        assigned: { "2023-4": 150 },
+                        id: "8e680180-7933-4f86-9ac4-097a75c1f065",
+                        name: "Transport",
+                        target: { "2023-4": { amount: 75, day: 1, type: "weekly" } },
+                    },
+                    {
+                        assigned: { "2023-4": 188 },
+                        id: "dbd1ed7b-4975-4786-8fac-2259dc4aa08f",
+                        name: "Subscription",
+                        target: { "2023-4": { amount: 188, day: 1, type: "monthly" } },
+                    },
+                    {
+                        assigned: { "2023-4": 292 },
+                        id: "67e8e89c-b9d3-489d-9733-df8e04f6bb7b",
+                        name: "Food",
+                        target: { "2023-4": { amount: 250, day: 1, type: "weekly" } },
+                    },
+                ],
+                id: "e2e3f107-3ba9-40ad-ac3c-547c91214b50",
+                name: "Fixed",
+            },
+            {
+                categories: [
+                    {
+                        assigned: { "2023-4": 13900 },
+                        id: "72cf2907-aee2-4396-994b-a46d7f7cfe64",
+                        name: "Others",
+                        target: {},
+                    },
+                ],
+                id: "b2b07782-c497-4b5e-985e-9057a7f6134e",
+                name: "Non-Monthly",
+            },
+        ],
+        transactions: [
+            {
+                amount: 6.5,
+                categoryId: "8e680180-7933-4f86-9ac4-097a75c1f065",
+                date: 1682499988841,
+                description: "mtr",
+                id: "d6773242-974a-4ed4-950b-927d072309a5",
+                type: "outflow",
+            },
+            {
+                amount: 20,
+                categoryId: "67e8e89c-b9d3-489d-9733-df8e04f6bb7b",
+                date: 1682498788376,
+                description: "sandwich and chicken",
+                id: "3dad8b2d-72b3-4de7-9457-b1852cf41f2f",
+                type: "outflow",
+            },
+            {
+                amount: 95,
+                categoryId: "dbd1ed7b-4975-4786-8fac-2259dc4aa08f",
+                date: 1682462505685,
+                description: "nord",
+                id: "13e8556b-29cb-4092-9683-7dc4a7b7da1e",
+                type: "outflow",
+            },
+            {
+                amount: 300,
+                date: 1682462054325,
+                description: "mom money",
+                id: "e1abd776-96aa-43a6-9bbb-9bebcf1cad99",
+                type: "inflow",
+            },
+        ],
+        version: 1,
+    } as z.infer<typeof BudgetType1>)!;
+
+    // * Checks
+    expect(updated.version).toBe(2);
+    expect(updated.categoryGroups).toHaveLength(2);
+    expect(updated.accounts).toHaveLength(1);
+    expect(updated.accounts[0].name).toBe("Main");
+    expect(updated.accounts[0].transactions[0]).toMatchObject<z.infer<typeof Transaction>>({
+        amount: 6.5,
+        categoryId: "8e680180-7933-4f86-9ac4-097a75c1f065",
+        date: 1682499988841,
+        description: "mtr",
+        id: "d6773242-974a-4ed4-950b-927d072309a5",
+        type: "outflow",
+    });
+});
+
+test("FromJSON", () => {
+    expect(() =>
+        // @ts-expect-error
+        Budget.FromJSON({
+            categoryGroups: [],
+            version: 2,
+        })
+    ).toThrow();
+    expect(() =>
+        Budget.FromJSON({
+            accounts: [],
+            categoryGroups: [],
+            version: 2,
+        })
+    ).not.toThrow();
 });
 
 test("Category", () => {
@@ -25,22 +137,22 @@ test("Category", () => {
     let catId = budget.addCategory(groupId, "Spotify")!;
 
     // * Checks
-    expect(budget.toJSON().categories).toHaveLength(1);
-    expect(budget.toJSON().categories[0].name).toBe("Subscriptions");
-    expect(budget.toJSON().categories[0].categories).toHaveLength(1);
-    expect(budget.toJSON().categories[0].categories[0].name).toBe("Spotify");
+    expect(budget.toJSON().categoryGroups).toHaveLength(1);
+    expect(budget.toJSON().categoryGroups[0].name).toBe("Subscriptions");
+    expect(budget.toJSON().categoryGroups[0].categories).toHaveLength(1);
+    expect(budget.toJSON().categoryGroups[0].categories[0].name).toBe("Spotify");
 
     // * Delete Category
     budget.deleteCategory(catId);
 
     // * Checks
-    expect(budget.toJSON().categories[0].categories).toHaveLength(0);
+    expect(budget.toJSON().categoryGroups[0].categories).toHaveLength(0);
 
     // * Delete CategoryGroup
     budget.deleteCategoryGroup(groupId);
 
     // * Checks
-    expect(budget.toJSON().categories).toHaveLength(0);
+    expect(budget.toJSON().categoryGroups).toHaveLength(0);
 });
 
 test("Assign", () => {
@@ -73,15 +185,17 @@ test("Target", () => {
 
     const target = {
         amount: 100,
-        day: 23,
-        type: "monthly",
-    } as const;
+        dayOfMonth: 23,
+        every: 1,
+        type: "every_x_month",
+    } as z.infer<typeof Target>;
 
     const target2 = {
         amount: 1000,
-        day: 14,
-        type: "monthly",
-    } as const;
+        dayOfMonth: 23,
+        every: 1,
+        type: "every_x_month",
+    } as z.infer<typeof Target>;
 
     // * Set target to target in 2023-3
     budget.setTarget(catId, "2023-3", target);
@@ -106,8 +220,12 @@ test("Transaction", () => {
     let groupId = budget.addCategoryGroup("Subscriptions")!;
     let catId = budget.addCategory(groupId, "Spotify")!;
 
+    let account1 = budget.addAccount("Checking")!;
+    let account2 = budget.addAccount("Savings")!;
+
     // * Transact $100 to me in 2021-11-30
     budget.transact({
+        account: account1,
         amount: 100,
         date: new Date("2021-11-30").getTime(),
         description: "Allowance given by mom",
@@ -119,6 +237,7 @@ test("Transaction", () => {
 
     // * Transact $100 to me in 2022-03-09
     budget.transact({
+        account: account2,
         amount: 100,
         date: new Date("2022-03-09").getTime(),
         description: "Allowance given by dad",
@@ -127,6 +246,8 @@ test("Transaction", () => {
 
     // * Checks
     expect(budget.getBalance("2022-2")).toBe(100);
+    expect(budget.getBalance("2022-2", account1)).toBe(100);
+    expect(budget.getBalance("2022-2", account2)).toBe(0);
     expect(budget.getBalance("2022-12")).toBe(200);
 
     // * Assign $50 in 2022-1
@@ -140,6 +261,7 @@ test("Transaction", () => {
 
     // * Transact $100000 to Spotify in Date.now()
     let transId = budget.transact({
+        account: account1,
         amount: 100_000,
         categoryId: catId,
         date: new Date("2022-10-09").getTime(),
@@ -161,7 +283,7 @@ test("Transaction", () => {
 });
 
 test("Utils", () => {
-    const months: Month[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
+    const months: z.infer<typeof Month>[] = ["2022-2", "2023-4", "2025-3", "2025-7"];
     expect(GetClosestLastMonth(months, "2022-2")).toBe("2022-2");
     expect(GetClosestLastMonth(months, "2023-2")).toBe("2022-2");
     expect(GetClosestLastMonth(months, "2023-5")).toBe("2023-4");
