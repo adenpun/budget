@@ -1,26 +1,22 @@
 import { z } from "zod";
 
 export const Month = z.custom<`${number}-${number}`>((data) => {
-    return (
-        Array.isArray(data) &&
-        data.length === 2 &&
-        typeof data[0] === "number" &&
-        typeof data[1] === "number"
-    );
+    try {
+        return (
+            typeof data === "string" &&
+            data.split("-").length === 2 &&
+            typeof parseInt(data.split("-")[0]) === "number" &&
+            typeof parseInt(data.split("-")[0]) === "number"
+        );
+    } catch {
+        return false;
+    }
 });
-
-export const TargetTypes = z.union([
-    z.literal("every_x_week"),
-    z.literal("every_x_month"),
-    z.literal("every_x_year"),
-    z.literal("builder"),
-    z.literal("saving"),
-]);
 
 export const TargetBase = z.object({ amount: z.number().gt(0) });
 
 export const PeriodicTargetBase = TargetBase.extend({
-    every: z.number(),
+    type: z.string(),
 });
 
 export const WeeklyTarget = PeriodicTargetBase.extend({

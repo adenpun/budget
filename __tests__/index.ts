@@ -6,8 +6,10 @@ import {
     NextMonth,
     PreviousMonth,
     Target,
+    Transaction,
     z,
 } from "../src/index";
+import type { BudgetType as BudgetType1 } from "../src/budget-version-1";
 
 // * Initialization
 let budget = new Budget();
@@ -21,16 +23,107 @@ test("Default budget", () => {
     });
 });
 
+test("Update", () => {
+    let updated = Budget.Update({
+        categories: [
+            {
+                categories: [
+                    {
+                        assigned: { "2023-4": 150 },
+                        id: "8e680180-7933-4f86-9ac4-097a75c1f065",
+                        name: "Transport",
+                        target: { "2023-4": { amount: 75, day: 1, type: "weekly" } },
+                    },
+                    {
+                        assigned: { "2023-4": 188 },
+                        id: "dbd1ed7b-4975-4786-8fac-2259dc4aa08f",
+                        name: "Subscription",
+                        target: { "2023-4": { amount: 188, day: 1, type: "monthly" } },
+                    },
+                    {
+                        assigned: { "2023-4": 292 },
+                        id: "67e8e89c-b9d3-489d-9733-df8e04f6bb7b",
+                        name: "Food",
+                        target: { "2023-4": { amount: 250, day: 1, type: "weekly" } },
+                    },
+                ],
+                id: "e2e3f107-3ba9-40ad-ac3c-547c91214b50",
+                name: "Fixed",
+            },
+            {
+                categories: [
+                    {
+                        assigned: { "2023-4": 13900 },
+                        id: "72cf2907-aee2-4396-994b-a46d7f7cfe64",
+                        name: "Others",
+                        target: {},
+                    },
+                ],
+                id: "b2b07782-c497-4b5e-985e-9057a7f6134e",
+                name: "Non-Monthly",
+            },
+        ],
+        transactions: [
+            {
+                amount: 6.5,
+                categoryId: "8e680180-7933-4f86-9ac4-097a75c1f065",
+                date: 1682499988841,
+                description: "mtr",
+                id: "d6773242-974a-4ed4-950b-927d072309a5",
+                type: "outflow",
+            },
+            {
+                amount: 20,
+                categoryId: "67e8e89c-b9d3-489d-9733-df8e04f6bb7b",
+                date: 1682498788376,
+                description: "sandwich and chicken",
+                id: "3dad8b2d-72b3-4de7-9457-b1852cf41f2f",
+                type: "outflow",
+            },
+            {
+                amount: 95,
+                categoryId: "dbd1ed7b-4975-4786-8fac-2259dc4aa08f",
+                date: 1682462505685,
+                description: "nord",
+                id: "13e8556b-29cb-4092-9683-7dc4a7b7da1e",
+                type: "outflow",
+            },
+            {
+                amount: 300,
+                date: 1682462054325,
+                description: "mom money",
+                id: "e1abd776-96aa-43a6-9bbb-9bebcf1cad99",
+                type: "inflow",
+            },
+        ],
+        version: 1,
+    } as z.infer<typeof BudgetType1>)!;
+
+    // * Checks
+    expect(updated.version).toBe(2);
+    expect(updated.categoryGroups).toHaveLength(2);
+    expect(updated.accounts).toHaveLength(1);
+    expect(updated.accounts[0].name).toBe("Main");
+    expect(updated.accounts[0].transactions[0]).toMatchObject<z.infer<typeof Transaction>>({
+        amount: 6.5,
+        categoryId: "8e680180-7933-4f86-9ac4-097a75c1f065",
+        date: 1682499988841,
+        description: "mtr",
+        id: "d6773242-974a-4ed4-950b-927d072309a5",
+        type: "outflow",
+    });
+});
+
 test("FromJSON", () => {
     expect(() =>
         // @ts-expect-error
-        Budget.fromJSON({
+        Budget.FromJSON({
             categoryGroups: [],
             version: 2,
         })
     ).toThrow();
     expect(() =>
-        Budget.fromJSON({
+        Budget.FromJSON({
             accounts: [],
             categoryGroups: [],
             version: 2,

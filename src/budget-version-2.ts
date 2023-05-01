@@ -1,12 +1,16 @@
 import { z } from "zod";
 
 export const Month = z.custom<`${number}-${number}`>((data) => {
-    return (
-        Array.isArray(data) &&
-        data.length === 2 &&
-        typeof data[0] === "number" &&
-        typeof data[1] === "number"
-    );
+    try {
+        return (
+            typeof data === "string" &&
+            data.split("-").length === 2 &&
+            typeof parseInt(data.split("-")[0]) === "number" &&
+            typeof parseInt(data.split("-")[0]) === "number"
+        );
+    } catch {
+        return false;
+    }
 });
 
 //#region Target

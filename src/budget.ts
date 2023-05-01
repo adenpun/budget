@@ -41,9 +41,7 @@ export class Budget {
         id ??= randomUUID();
         if (this.getCategory(id) === null) {
             group?.categories.push({
-                assigned: {
-                    "20-2": 0,
-                },
+                assigned: {},
                 id,
                 name,
                 target: {},
@@ -68,7 +66,13 @@ export class Budget {
 
     public assign(id: string, month: z.infer<typeof Month>, amount: number): void {
         let cat = this.getCategory(id);
-        if (cat !== null) cat.assigned[month] = amount;
+        if (cat !== null) {
+            if (amount === 0) {
+                delete cat.assigned[month];
+            } else {
+                cat.assigned[month] = amount;
+            }
+        }
     }
 
     public deleteCategory(id: string): void {
@@ -225,7 +229,6 @@ export class Budget {
     ): void {
         const cat = this.getCategory(id);
         if (cat === null) return;
-        // @ts-ignore
         cat.target[month] = options;
     }
 
@@ -268,20 +271,73 @@ export class Budget {
         return JSON.stringify(this.toJSON());
     }
 
-    public update() {
-        let version = this.m_budget.version as number;
-
-        if (version === 1) {
-            let budget = BudgetType1.parse(this.m_budget);
-            this.m_budget.version = 2;
-            // TODO
-        }
-    }
-
-    public static fromJSON(json: z.infer<typeof BudgetType2>): Budget {
+    public static FromJSON(json: z.infer<typeof BudgetType2>): Budget {
         BudgetType2.parse(json);
         let budget = new Budget();
         budget.m_budget = json;
         return budget;
+    }
+
+    public static Update(p_json: { [p: string]: any; version: number }) {
+        if (p_json.version === 1) {
+            let json = BudgetType1.parse(p_json);
+            let budget = new Budget();
+            let mainAccount = budget.addAccount("Main")!;
+            json.categories.forEach((catGroup) => {
+                budget.addCategoryGroup(catGroup.name, catGroup.id);
+                catGroup.categories.forEach((cat) => {
+                    budget.addCategory(catGroup.id, cat.name, cat.id);
+                    Object.keys(cat.assigned).forEach((v) => {
+                        budget.assign(cat.id, v as any, cat.assigned[v as any]!);
+                    });
+                    Object.keys(budget.getCategory(cat.id)?.target ?? {}).forEach((v) => {
+                        let a = v as `${number}-${number}`;
+                        let target = cat.target[a]!;
+                        if (target.type === "monthly") {
+                            budget.setTarget(cat.id, a, {
+                                amount: target.amount,
+                                dayOfMonth: target.day,
+                                every: 1,
+                                type: "every_x_month",
+                            });
+                        } else if (target.type === "weekly") {
+                            budget.setTarget(cat.id, a, {
+                                amount: target.amount,
+                                dayOfWeek: target.day,
+                                every: 1,
+                                type: "every_x_week",
+                            });
+                        } else if (target.type === "yearly") {
+                            budget.setTarget(cat.id, a, {
+                                amount: target.amount,
+                                type: "every_x_year",
+                            });
+                        }
+                    });
+                });
+            });
+            json.transactions.forEach((v) => {
+                if (v.type === "inflow")
+                    budget.transact({
+                        account: mainAccount,
+                        amount: v.amount,
+                        date: v.date,
+                        description: v.description,
+                        id: v.id,
+                        type: "inflow",
+                    });
+                else if (v.type === "outflow")
+                    budget.transact({
+                        account: mainAccount,
+                        amount: v.amount,
+                        categoryId: v.categoryId,
+                        date: v.date,
+                        description: v.description,
+                        id: v.id,
+                        type: "outflow",
+                    });
+            });
+            return BudgetType2.parse(budget.toJSON());
+        }
     }
 }
